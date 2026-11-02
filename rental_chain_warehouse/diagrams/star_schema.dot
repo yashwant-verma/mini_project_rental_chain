@@ -1,0 +1,33 @@
+digraph RentalWarehouse {
+    graph [label="Rental Chain Performance Warehouse\nCore Star + Category Bridge + Shared Address Lookup", labelloc=t, fontsize=19, fontname="DejaVu Sans", bgcolor="white", pad=0.35, ranksep=0.9, nodesep=0.52, splines=ortho];
+    node [shape=record, style="rounded,filled", fontname="DejaVu Sans", fontsize=11, color="#64748b", fillcolor="#f8fafc", margin="0.14,0.10"];
+    edge [color="#64748b", arrowsize=0.6, penwidth=1.35, fontname="DejaVu Sans", fontsize=9];
+
+    fact [label="{FACT_RENTAL|rental_key (PK)\lrental_id (unique)\lrental_date_key (FK)\lreturn_date_key (FK)\lfilm_key (FK)\lstore_key (FK)\lcustomer_key (FK)\linventory_id (FK)\lamount, rental_duration_days\llate_flag, payment_count\l}", fillcolor="#dbeafe", color="#2563eb", penwidth=2.0];
+    film [label="{DIM_FILM|film_key (PK)\lfilm_id (NK)\ltitle, rating\lallowed_rental_days\lrental_rate\l}"];
+    store [label="{DIM_STORE|store_key (PK)\lstore_id (NK)\lstore_name, manager\laddress_id (FK)\l}"];
+    customer [label="{DIM_CUSTOMER|customer_key (PK)\lcustomer_id (NK)\lname, email, active\laddress_id (FK)\l}"];
+    dates [label="{DIM_DATE|date_key (PK YYYYMMDD)\lfull_date, year\lmonth, quarter, weekday\l}"];
+    inventory [label="{DIM_INVENTORY|inventory_id (PK)\lfilm_key (FK)\lstore_key (FK)\l}"];
+    address [label="{DIM_ADDRESS|address_id (PK)\laddress lines, district\lcity, country, postal\l}", fillcolor="#fef9c3"];
+    category [label="{DIM_CATEGORY|category_key (PK)\lcategory_id (NK)\lcategory_name\l}"];
+    bridge [label="{BRIDGE_FILM_CATEGORY|film_key + category_key (PK)\lallocation_weight\l}", fillcolor="#fef3c7"];
+    martstore [label="{MART_STORE_DAY|store_key + date_key\lrentals, revenue\lreturned, late returns\l}", fillcolor="#dcfce7"];
+    martcat [label="{MART_STORE_CATEGORY_DAY|store_key + date_key + category_key\lallocated rentals & revenue\lallocated returns & late returns\l}", fillcolor="#dcfce7"];
+
+    fact -> dates [label="rental / return"];
+    fact -> film;
+    fact -> store;
+    fact -> customer;
+    fact -> inventory;
+    film -> bridge;
+    bridge -> category;
+    store -> address;
+    customer -> address;
+    inventory -> film;
+    inventory -> store;
+    fact -> martstore [style=dashed, color="#16a34a", label="aggregate"];
+    fact -> martcat [style=dashed, color="#16a34a", label="weighted"];
+    {rank=same; dates; film; store; customer; inventory;}
+    {rank=same; martstore; martcat;}
+}
